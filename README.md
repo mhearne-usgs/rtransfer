@@ -15,7 +15,7 @@ Installation and Dependencies
 -----------------------------
 To install this package:
 
-pip install git+git://https://github.com/mhearne-usgs/rtransfer.git
+pip install git+git://github.com/mhearne-usgs/rtransfer.git
 
 This last command will install rget in your path.
 
@@ -28,7 +28,7 @@ pip uninstall rtransfer
 
 To update:
 
-pip install -U git+git://https://github.com/mhearne-usgs/rtransfer.git
+pip install -U git+git://github.com/mhearne-usgs/rtransfer.git
 
 
 Usage for rget
