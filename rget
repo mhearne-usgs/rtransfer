@@ -1,0 +1,150 @@
+#!/usr/bin/env python
+
+import sys
+import argparse
+import os.path
+import getpass
+import json
+import subprocess
+
+def getCommandOutput(cmd):
+    """
+    Internal method for calling external command.
+    @param cmd: String command ('ls -l', etc.)
+    @return: Three-element tuple containing a boolean indicating success or failure, 
+    the stdout from running the command, and stderr.
+    """
+    proc = subprocess.Popen(cmd,
+                            shell=True,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE
+                            )
+    stdout,stderr = proc.communicate()
+    retcode = proc.returncode
+    if retcode == 0:
+        retcode = True
+    else:
+        retcode = False
+    return (retcode,stdout,stderr)
+
+def readConfig():
+    user = getpass.getuser()
+    configfolder = os.path.join(os.path.expanduser('~'),'.rtransfer')
+    configfile = os.path.join(configfolder,'config.json')
+    if not os.path.isfile(configfile):
+        return None
+    hosts = json.load(open(configfile,'rt'))
+    return hosts
+
+def doConfig():
+    user = getpass.getuser()
+    configfolder = os.path.join(os.path.expanduser('~'),'.rtransfer')
+    if not os.path.isdir(configfolder):
+        os.makedirs(configfolder)
+    configfile = os.path.join(configfolder,'config.json')
+    if os.path.isfile(configfile):
+        oldconfig = json.load(open(configfile,'rt'))
+    else:
+        oldconfig = {}
+    config = {}
+    while True:
+        alias = raw_input('Enter the alias for a remote host to configure: ')
+        host = raw_input('Enter the domain name of the remote host: ')
+        home = raw_input('What is the home directory for %s on %s? ' % (user,host))
+        service = raw_input('What is the name of the service account on %s? ' % (host))
+        config[alias] = {'host':host,'home':home,'service':service}
+        s = raw_input('Do you have more hosts to configure? y/[n] ')
+        if s != 'y':
+            break
+
+    for alias,hostdict in oldconfig.iteritems():
+        config[alias] = hostdict.copy()
+    json.dump(config,open(configfile,'wt'))
+    
+
+def main(args):
+    if args.listconfig:
+        config = readConfig() 
+        for host,hostdict in config.iteritems():
+            fmt = 'Alias: %s \n\tHost: %s \n\tUsers home directory: %s \n\tService Account: %s'
+            tpl = (host,hostdict['host'],hostdict['home'],hostdict['service'])
+            print fmt % tpl
+        sys.exit(0)
+        
+    if args.config:
+        doConfig()
+        sys.exit(0)
+        
+    if not (args.remotehost and args.files):
+        print 'Usage: rget -r remotehost -f remotefile1 remotefile2 ...'
+        sys.exit(1)
+        
+    config = readConfig() #ordered dict
+    if config is None:
+        print 'No configuration found.  Run with -c to configure some hosts.'
+        sys.exit(1)
+        
+    user = getpass.getuser()
+    
+    remotehost = args.remotehost
+    remotefiles = args.files
+        
+    if not config.has_key(remotehost):
+        print 'No config found for remote alias %s.  Here is a list of the currently configured systems.' % remotehost
+        for host,hostdict in config.iteritems():
+            fmt = 'Alias: %s \n\tHost: %s \n\tUsers home directory: %s \n\tService Account: %s'
+            tpl = (host,hostdict['host'],hostdict['home'],hostdict['service'])
+            print fmt % tpl
+        print 'Run with the -c option to configure a new system.'
+        sys.exit()
+
+    hostdict = config[remotehost]
+    sshcmd = 'ssh -t %s@%s "sudo cp %s %s"' % (user,hostdict['host'],' '.join(remotefiles),hostdict['home'])
+    print 'Copying files from service account to remote user \n(you will be prompted for sudo password on %s)' % hostdict['host']
+    print
+    sys.stdout.write('[sudo] password for %s:' % user)
+    sys.stdout.flush()
+    retcode,stdout,stderr = getCommandOutput(sshcmd)
+    print
+    for rfile in remotefiles:
+        fpath,fname = os.path.split(rfile)
+        scpcmd = 'scp %s@%s:%s/%s .' % (user,hostdict['host'],hostdict['home'],fname)
+        print 'Copying remote files from your home directory on %s to local directory.' % hostdict['host']
+        retcode,stdout,stderr = getCommandOutput(scpcmd)
+
+        
+if __name__ == '__main__':
+    desc = '''Retrieve files from a remote system with a service account.
+    In order to avoid the sequence of ssh and scp commands required to copy files from 
+    a "service" account on a remote system to a directory on your local system, this program
+    automates as much of that as possible.
+    Examples:
+
+    To configure a system:
+    rget -c
+    Enter the alias for a remote host to configure: mysystem
+    Enter the domain name of the remote host: mysystem.com
+    What is the home directory for mhearne on mysystem.com? /home/AD/mhearne 
+    What is the name of the service account on mysystem.com? service
+    Do you have more hosts to configure? y/[n] n
+
+    To copy files from that system:
+    rget -r mysystem -f file1.txt file2.txt
+    
+    Copying files from service account to remote user 
+    (you will be prompted for sudo password on igskaecgvmdvlsp)
+
+    [sudo] password for mhearne:
+    Copying remote files from your home directory on igskaecgvmdvlsp to local directory.
+    '''
+    parser = argparse.ArgumentParser(description=desc,formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-r','--remotehost', help='Remote system name (or alias) where files should be retrieved from')
+    parser.add_argument('-f','--files', help='Remote files under system account to be retrieved.',nargs='+')
+    parser.add_argument('-c','--config', help='Configure remote accounts.',action='store_true')
+    parser.add_argument('-l','--listconfig', help='List configured remote accounts.',action='store_true')
+    pargs = parser.parse_args()
+
+    main(pargs)
+    
+        
+
