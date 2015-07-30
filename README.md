@@ -16,7 +16,14 @@ There are three commands that are installed with this package:
  - rput A program for transferring local files to a service account on a remote system
  - rcfg A program for configuring the remote systems.
 
-See the usage below for each of these programs.
+For details about the usage of each of these programs, see below, but generally these three programs work like this:
+
+ - Use rcfg to define:
+   * A short, easy to remember "alias" for each remote system
+   * The path to the user's home directory on that remote system
+   * The name of the service account
+- Use rget to fetch files from these remote systems.
+- Use rput to transfer files to these remote systems.
 
 Installation and Dependencies
 -----------------------------
