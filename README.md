@@ -22,8 +22,8 @@ For details about the usage of each of these programs, see below, but generally 
    * A short, easy to remember "alias" for each remote system
    * The path to the user's home directory on that remote system
    * The name of the service account
-- Use rget to fetch files from these remote systems.
-- Use rput to transfer files to these remote systems.
+ - Use rget to fetch files from these remote systems.
+ - Use rput to transfer files to these remote systems.
 
 Installation and Dependencies
 -----------------------------
