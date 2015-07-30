@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-import sys
-import argparse
 import os.path
+import subprocess
+import argparse
 import getpass
 import json
-import subprocess
+import sys
 
 def getCommandOutput(cmd):
     """
@@ -37,68 +37,62 @@ def readConfig():
     return hosts
 
 def main(args):
-    if not (args.remotehost and args.files):
-        print 'Usage: rget -r remotehost -f remotefile1 remotefile2 ...'
-        sys.exit(1)
-        
-    config = readConfig() #ordered dict
+    rfolder = args.arguments.pop()
+    alias = args.arguments.pop()
+    localfiles = args.arguments
+    #make sure local files exist
+    for lfile in localfiles:
+        if not os.path.isfile(lfile):
+            print 'Local file %s does not exist.  Exiting.' % lfile
+            sys.exit(1)
+    config = readConfig()
     if config is None:
         print 'No configuration found.  Run with -c to configure some hosts.'
         sys.exit(1)
-        
     user = getpass.getuser()
-    
-    remotehost = args.remotehost
-    remotefiles = args.files
-        
-    if not config.has_key(remotehost):
-        print 'No config found for remote alias %s.  Here is a list of the currently configured systems.' % remotehost
+
+    if not config.has_key(alias):
+        print 'No config found for remote alias %s.  Here is a list of the currently configured systems.' % alias
         for host,hostdict in config.iteritems():
             fmt = 'Alias: %s \n\tHost: %s \n\tUsers home directory: %s \n\tService Account: %s'
             tpl = (host,hostdict['host'],hostdict['home'],hostdict['service'])
             print fmt % tpl
         sys.exit()
 
-    hostdict = config[remotehost]
-    sshcmd = 'ssh -t %s@%s "sudo cp %s %s"' % (user,hostdict['host'],' '.join(remotefiles),hostdict['home'])
-    print 'Copying files from service account to remote user \n(you will be prompted for sudo password on %s)' % hostdict['host']
+    hostdict = config[alias]
+    scpcmd = 'scp %s %s@%s:%s' % (' '.join(localfiles),user,hostdict['host'],hostdict['home'])
+    print 'Copying files from desktop to %s' % hostdict['host']
+    retcode,stdout,stderr = getCommandOutput(scpcmd)
+    rfiles = []
+    for lfile in localfiles:
+        fpath,fname = os.path.split(lfile)
+        rfiles.append(os.path.join(hostdict['home'],fname))
+    sshcmd = 'ssh -t %s@%s "sudo mv %s %s"' % (user,hostdict['host'],' '.join(rfiles),rfolder)
+    print 'Copying files from remote user to service account\n(you will be prompted for sudo password on %s)' % hostdict['host']
     print
     sys.stdout.write('[sudo] password for %s:' % user)
     sys.stdout.flush()
     retcode,stdout,stderr = getCommandOutput(sshcmd)
     print
-    for rfile in remotefiles:
-        fpath,fname = os.path.split(rfile)
-        scpcmd = 'scp %s@%s:%s/%s .' % (user,hostdict['host'],hostdict['home'],fname)
-        print 'Copying remote files from your home directory on %s to local directory.' % hostdict['host']
-        retcode,stdout,stderr = getCommandOutput(scpcmd)
-        delcmd = 'ssh -t %s@%s "rm %s"' % (user,hostdict['host'],os.path.join(hostdict['home'],fname))
-        retcode2,stdout2,stderr2 = getCommandOutput(delcmd)
-                                                
 
-        
 if __name__ == '__main__':
-    desc = '''Retrieve files from a remote system with a service account.
+    desc = '''Transfer files to a remote system with a service account.
     In order to avoid the sequence of ssh and scp commands required to copy files from 
-    a "service" account on a remote system to a directory on your local system, this program
+    a directory on your local system to a "service" account on a remote system, this program
     automates as much of that as possible.
     Examples:
 
-    To copy files from a system:
-    rget mysystem /home/service/file1.txt /home/service/file2.txt
+    To copy files to a remote system:
+    rput file.txt file2.txt mysystem /home/service/data
     
-    Copying files from service account to remote user 
+    Copying files from remote user to service account 
     (you will be prompted for sudo password on igskaecgvmdvlsp)
 
-    [sudo] password for user:
-    Copying remote files from your home directory on mysystem to local directory.
+    [sudo] password for mhearne:
+    Copying remote files from your home directory on mysystem to service account folder.
     '''
     parser = argparse.ArgumentParser(description=desc,formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('remotehost', help='Remote system name (or alias) where files should be retrieved from')
-    parser.add_argument('files', help='Remote files under system account to be retrieved.',nargs='+')
+    parser.add_argument('arguments', help='Input list of arguments - last two must be alias and remote folder',nargs='+')
     pargs = parser.parse_args()
 
     main(pargs)
-    
-        
-

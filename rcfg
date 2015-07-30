@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+
+import sys
+import argparse
+import os.path
+import getpass
+import json
+import subprocess
+
+def readConfig():
+    user = getpass.getuser()
+    configfolder = os.path.join(os.path.expanduser('~'),'.rtransfer')
+    configfile = os.path.join(configfolder,'config.json')
+    if not os.path.isfile(configfile):
+        return None
+    hosts = json.load(open(configfile,'rt'))
+    return hosts
+
+def doConfig():
+    user = getpass.getuser()
+    configfolder = os.path.join(os.path.expanduser('~'),'.rtransfer')
+    if not os.path.isdir(configfolder):
+        os.makedirs(configfolder)
+    configfile = os.path.join(configfolder,'config.json')
+    if os.path.isfile(configfile):
+        oldconfig = json.load(open(configfile,'rt'))
+    else:
+        oldconfig = {}
+    config = {}
+    while True:
+        alias = raw_input('Enter the alias for a remote host to configure: ')
+        host = raw_input('Enter the domain name of the remote host: ')
+        home = raw_input('What is the home directory for %s on %s? ' % (user,host))
+        service = raw_input('What is the name of the service account on %s? ' % (host))
+        config[alias] = {'host':host,'home':home,'service':service}
+        s = raw_input('Do you have more hosts to configure? y/[n] ')
+        if s != 'y':
+            break
+
+    for alias,hostdict in oldconfig.iteritems():
+        config[alias] = hostdict.copy()
+    json.dump(config,open(configfile,'wt'))
+    
+def deleteAlias(alias):
+    user = getpass.getuser()
+    configfolder = os.path.join(os.path.expanduser('~'),'.rtransfer')
+    configfile = os.path.join(configfolder,'config.json')
+    config = json.load(open(configfile,'rt'))
+    if config.has_key(alias):
+        stuff = config.pop(alias)
+        json.dump(config,open(configfile,'wt'))
+        print 'Deleted information for alias %s: %s' % (alias,str(stuff))
+    else:
+        print 'Alias %s not found in config file.  Exiting.' % alias
+        
+    
+if __name__ == '__main__':
+    desc = '''Configure systems for use by rget and rput.
+    To configure a system:
+    rcfg
+    Enter the alias for a remote host to configure: mysystem
+    Enter the domain name of the remote host: mysystem.com
+    What is the home directory for mhearne on mysystem.com? /home/AD/myuser 
+    What is the name of the service account on mysystem.com? service
+    Do you have more hosts to configure? y/[n] n
+    '''
+    parser = argparse.ArgumentParser(description=desc,formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-l','--listconfig', help='List configured remote accounts.',action='store_true')
+    parser.add_argument('-d','--delete', help='delete configured remote account.')
+    pargs = parser.parse_args()
+
+    if pargs.delete is not None:
+        deleteAlias(pargs.delete)
+        sys.exit(0)
+    
+    if pargs.listconfig:
+        config = readConfig()
+        for host,hostdict in config.iteritems():
+            fmt = 'Alias: %s \n\tHost: %s \n\tUsers home directory: %s \n\tService Account: %s'
+            tpl = (host,hostdict['host'],hostdict['home'],hostdict['service'])
+            print fmt % tpl
+        sys.exit(0)
+    else:
+        doConfig()
+        sys.exit(0)

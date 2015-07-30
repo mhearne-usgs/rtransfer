@@ -6,5 +6,5 @@ setup(name='rtransfer',
       author='Mike Hearne',
       author_email='mhearne@usgs.gov',
       url='',
-      scripts = ['rget'],
+      scripts = ['rget','rput','rcfg'],
 )
