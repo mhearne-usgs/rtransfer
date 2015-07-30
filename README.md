@@ -60,7 +60,7 @@ Retrieve files from a remote system with a service account.
     rget mysystem /home/service/file1.txt /home/service/file2.txt
     
     Copying files from service account to remote user 
-    (you will be prompted for sudo password on igskaecgvmdvlsp)
+    (you will be prompted for sudo password on mysystem)
 
     [sudo] password for user:
     Copying remote files from your home directory on mysystem to local directory.
@@ -89,7 +89,7 @@ Transfer files to a remote system with a service account.
     rput file.txt file2.txt mysystem /home/service/data
     
     Copying files from remote user to service account 
-    (you will be prompted for sudo password on igskaecgvmdvlsp)
+    (you will be prompted for sudo password on mysystem)
 
     [sudo] password for mhearne:
     Copying remote files from your home directory on mysystem to service account folder.
