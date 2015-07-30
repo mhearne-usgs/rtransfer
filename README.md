@@ -25,6 +25,17 @@ For details about the usage of each of these programs, see below, but generally 
  - Use rget to fetch files from these remote systems.
  - Use rput to transfer files to these remote systems.
 
+Note on usage:
+--------------
+All of these programs assume that you have ssh access to these remote systems authenticated using a public key.  To test this,
+ssh into the desired remote system.  If you're not prompted for a password, then these programs will work.  If you are prompted for
+a password, then you'll need to configure that.  Excellent instructions for doing this can be found here:  
+
+https://macnugget.org/projects/publickeys/
+
+Pay particular attention to the section about permissions on the remote system (.ssh folder and authorized_keys file).  Those are 
+easy steps to forget.
+
 Installation and Dependencies
 -----------------------------
 To install this package:
