@@ -86,7 +86,7 @@ if __name__ == '__main__':
     rput file.txt file2.txt mysystem /home/service/data
     
     Copying files from remote user to service account 
-    (you will be prompted for sudo password on igskaecgvmdvlsp)
+    (you will be prompted for sudo password on mysystem)
 
     [sudo] password for mhearne:
     Copying remote files from your home directory on mysystem to service account folder.

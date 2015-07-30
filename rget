@@ -88,7 +88,7 @@ if __name__ == '__main__':
     rget mysystem /home/service/file1.txt /home/service/file2.txt
     
     Copying files from service account to remote user 
-    (you will be prompted for sudo password on igskaecgvmdvlsp)
+    (you will be prompted for sudo password on mysystem)
 
     [sudo] password for user:
     Copying remote files from your home directory on mysystem to local directory.
