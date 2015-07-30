@@ -91,7 +91,7 @@ Transfer files to a remote system with a service account.
     Copying files from remote user to service account 
     (you will be prompted for sudo password on mysystem)
 
-    [sudo] password for mhearne:
+    [sudo] password for user:
     Copying remote files from your home directory on mysystem to service account folder.
     
 
@@ -112,7 +112,7 @@ Configure systems for use by rget and rput.
     rcfg
     Enter the alias for a remote host to configure: mysystem
     Enter the domain name of the remote host: mysystem.com
-    What is the home directory for mhearne on mysystem.com? /home/AD/myuser 
+    What is the home directory for user on mysystem.com? /home/AD/myuser 
     What is the name of the service account on mysystem.com? service
     Do you have more hosts to configure? y/[n] n
     
