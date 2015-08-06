@@ -67,7 +67,8 @@ def main(args):
     for lfile in localfiles:
         fpath,fname = os.path.split(lfile)
         rfiles.append(os.path.join(hostdict['home'],fname))
-    sshcmd = 'ssh -t %s@%s "sudo mv %s %s"' % (user,hostdict['host'],' '.join(rfiles),rfolder)
+    service_account = hostdict['service']
+    sshcmd = 'ssh -t %s@%s "sudo chown %s %s;sudo mv %s %s"' % (user,hostdict['host'],service_account,' '.join(rfiles),' '.join(rfiles),rfolder)
     print 'Copying files from remote user to service account\n(you will be prompted for sudo password on %s)' % hostdict['host']
     print
     sys.stdout.write('[sudo] password for %s:' % user)
