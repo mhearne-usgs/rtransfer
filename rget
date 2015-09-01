@@ -60,7 +60,7 @@ def main(args):
         sys.exit()
 
     hostdict = config[remotehost]
-    sshcmd = 'ssh -t %s@%s "sudo cp %s %s"' % (user,hostdict['host'],' '.join(remotefiles),hostdict['home'])
+    sshcmd = 'ssh -t %s@%s "sudo cp -R %s %s"' % (user,hostdict['host'],' '.join(remotefiles),hostdict['home'])
     print 'Copying files from service account to remote user \n(you will be prompted for sudo password on %s)' % hostdict['host']
     print
     sys.stdout.write('[sudo] password for %s:' % user)
@@ -69,7 +69,7 @@ def main(args):
     print
     for rfile in remotefiles:
         fpath,fname = os.path.split(rfile)
-        scpcmd = 'scp %s@%s:%s/%s .' % (user,hostdict['host'],hostdict['home'],fname)
+        scpcmd = 'scp -r %s@%s:%s/%s .' % (user,hostdict['host'],hostdict['home'],fname)
         print 'Copying remote files from your home directory on %s to local directory.' % hostdict['host']
         retcode,stdout,stderr = getCommandOutput(scpcmd)
         delcmd = 'ssh -t %s@%s "rm %s"' % (user,hostdict['host'],os.path.join(hostdict['home'],fname))
